@@ -35,13 +35,13 @@ class Patient(BaseModel):
         else:
             return 'Obese'
         
-# class PatientUpdate(BaseModel):
-#     name: Annotated[Optional[str], Field(default=None)]
-#     city: Annotated[Optional[str], Field(default=None)]
-#     age: Annotated[Optional[int], Field(default=None, gt=0)]
-#     gender: Annotated[Optional[Literal['male', 'female']], Field(default=None)]
-#     height: Annotated[Optional[float], Field(default=None, gt=0)]
-#     weight: Annotated[Optional[float], Field(default=None, gt=0)]
+class PatientUpdate(BaseModel):
+    name: Annotated[Optional[str], Field(default=None)]
+    city: Annotated[Optional[str], Field(default=None)]
+    age: Annotated[Optional[int], Field(default=None, gt=0)]
+    gender: Annotated[Optional[Literal['male', 'female']], Field(default=None)]
+    height: Annotated[Optional[float], Field(default=None, gt=0)]
+    weight: Annotated[Optional[float], Field(default=None, gt=0)]
 
 
 def load_data():
@@ -114,3 +114,20 @@ def create_patient(patient: Patient):
     save_data(data)
 
     return JSONResponse(status_code=201, content={'message':'patient created successfully'})
+
+@app.put("/edit/{patient_id}")
+def edit_patient(patient_id: str, patient_update: PatientUpdate):
+    data= load_data()
+    if patient_id not  in data:
+        return HTTPException(status_code=404, detail='Patient not found')
+
+    existing_patient_info =data[patient_id]
+    updated_patient_info= patient_update.model_dump(exclude_unset=True) # since we only need those fields which client set
+    for key, value in updated_patient_info.items():
+          existing_patient_info[key]= value
+
+    data[patient_id]=existing_patient_info
+    save_data(data)
+
+
+
